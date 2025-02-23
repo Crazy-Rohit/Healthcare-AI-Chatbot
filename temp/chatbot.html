@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Swaasth AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+</head>
+<body class="bg-blue-900 h-screen flex flex-col">
+    <!-- Top Bar -->
+    <div class="bg-blue-800 flex items-center justify-between px-4 py-2">
+        <div class="flex items-center space-x-4">
+            <button class="text-white text-2xl">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="relative">
+                <input class="bg-blue-200 text-blue-900 rounded-full px-4 py-2 w-64" placeholder="Search" type="text"/>
+                <i class="fas fa-search text-blue-900 absolute right-3 top-1/2 transform -translate-y-1/2"></i>
+            </div>
+        </div>
+        <img alt="Logo" class="rounded-full" height="50" src="logo.png" width="50"/>
+    </div>
+
+    <div class="flex flex-1 h-full">
+        <!-- Sidebar -->
+        <div class="bg-blue-200 w-1/4 p-4">
+            <div class="flex flex-col items-center">
+                <p class="text-blue-900 font-bold mb-4">Swaasth AI</p>
+                <nav class="w-full">
+                    <ul class="space-y-2">
+                        <li class="flex items-center text-blue-900 hover:bg-blue-300 p-2 rounded bg-blue-500">
+                            <i class="fas fa-comments mr-2"></i>
+                            Chat
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="bg-blue-900 flex-1 p-4">
+            <div class="bg-blue-200 rounded-lg p-4 h-full flex flex-col">
+                <div class="bg-blue-800 text-white rounded-t-lg px-4 py-2">
+                    <h2 class="text-xl">Swaasth AI</h2>
+                </div>
+
+                <!-- Chat Messages Container -->
+                <div id="chat-messages" class="flex-1 overflow-y-auto p-4">
+                    <!-- Messages will be inserted here -->
+                </div>
+
+                <!-- Input Area -->
+                <div class="bg-blue-50 rounded-b-lg p-2 flex items-center mt-auto">
+                    <input class="flex-1 p-2 rounded-full" placeholder="Write a message" type="text"/>
+                    <button class="text-blue-800 ml-2" type="button">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatContainer = document.getElementById('chat-messages');
+        const messageInput = document.querySelector('input[placeholder="Write a message"]');
+        const sendButton = document.querySelector('button.text-blue-800');
+
+        function createMessageElement(message, isUser = false) {
+            const messageWrapper = document.createElement('div');
+            messageWrapper.className = `flex items-start mt-4 ${isUser ? 'justify-end' : ''}`;
+
+            const messageContent = document.createElement('div');
+            messageContent.className = `bg-blue-50 p-2 rounded-lg shadow ${isUser ? 'ml-auto' : ''}`;
+            messageContent.innerHTML = message; // Changed from textContent to innerHTML
+
+            messageWrapper.appendChild(messageContent);
+            chatContainer.appendChild(messageWrapper);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        async function handleSendMessage(event) {
+            if (event) event.preventDefault();
+
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            createMessageElement(message, true);
+            messageInput.value = '';
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message: message})
+                });
+
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+
+                createMessageElement(data.message, false);
+            } catch (error) {
+                createMessageElement('Error: Unable to fetch response.', false);
+            }
+        }
+
+        sendButton.addEventListener('click', handleSendMessage);
+        messageInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') handleSendMessage(event);
+        });
+    });
+    </script>
+</body>
+</html>
